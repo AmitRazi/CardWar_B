@@ -16,13 +16,21 @@ namespace ariel {
 
     public:
 
-        Player(std::string name = "No Name");
+        Player(std::string name) : name(std::move(name)), wonCards(0) {
+            if(this->name.length() == 0) this->name = "No Name";
+        }
 
-        Player(Player &&) noexcept;
+        //Copy constructor
+        Player(const Player &other) : Player(other.name) {
+        }
 
-        Player(const Player &);
+        //Move constructor
+        Player(Player &&other) noexcept: name(std::move(other.name)), stack(std::move(other.stack)),
+                                                 wonCards(other.wonCards) {
+            other.wonCards = -1;
+        }
 
-        ~Player();
+        ~Player() = default;
 
         std::string getName();
 
