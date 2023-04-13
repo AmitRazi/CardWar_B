@@ -3,67 +3,51 @@
 
 using namespace ariel;
 
-Card::Card(Suit suit, Rank rank) : suit_type(suit), rank_value(rank) {}
-
-Card::Card(const Card &other) : Card(other.getSuit(), other.getRank()) {
-}
-
-Card::Card(Card &&other) noexcept: suit_type(other.suit_type), rank_value(other.rank_value) {
-    other.suit_type = INVALID_SUIT;
-    other.rank_value = INVALID_RANK;
-}
-
-Card::~Card() = default;
-
-Card::Rank Card::getRank() const {
-    return rank_value;
-}
-
-Card::Suit Card::getSuit() const {
-    return suit_type;
-}
 
 bool Card::operator>(const Card &other) const {
-    if (rank_value == Card::ACE) {
-        if (other.rank_value == Card::TWO) return false;
+    if (rankValue == Card::ACE) {
+        if (other.rankValue == Card::TWO) return false;
     }
-    return rank_value > other.rank_value;
+    return rankValue > other.rankValue;
 }
 
 bool Card::operator<(const Card &other) const {
-    if (rank_value == Card::ACE) {
-        if (other.rank_value == Card::TWO) return true;
+    if (rankValue == Card::ACE) {
+        if (other.rankValue == Card::TWO) return true;
     }
-    return rank_value < other.rank_value;
+    return rankValue < other.rankValue;
 }
 
 bool Card::operator==(const Card &other) const {
-    return rank_value == other.rank_value;
+    return rankValue == other.rankValue;
 }
 
+//Overloading copy assignment operator
 Card &Card::operator=(const Card &other) {
     if (this == &other) {
         return *this;
     }
 
-    rank_value = other.rank_value;
-    suit_type = other.suit_type;
+    rankValue = other.rankValue;
+    suitType = other.suitType;
     return *this;
 }
 
+//Overloading move assignment operator
 Card &Card::operator=(Card &&other) noexcept {
     if (this == &other) {
         return *this;
     }
 
-    rank_value = other.rank_value;
-    suit_type = other.suit_type;
-    other.rank_value = INVALID_RANK;
-    other.suit_type = INVALID_SUIT;
+    rankValue = other.rankValue;
+    suitType = other.suitType;
+    other.rankValue = INVALID_RANK;
+    other.suitType = INVALID_SUIT;
 
     return *this;
 }
 
+//Overloading string() operator to be used in tandem with the overloaded << operator
 Card::operator std::string() const {
     std::stringstream stringStream;
     stringStream<<*this;
@@ -71,6 +55,7 @@ Card::operator std::string() const {
 }
 
 namespace ariel {
+
     std::ostream &operator<<(std::ostream &ostream, const Card &card) {
         Card::Rank card_rank = card.getRank();
         std::string rank;
