@@ -12,13 +12,11 @@ namespace ariel {
     private:
         std::string name;
         std::vector<Card> stack;
-        int won_cards;
+        int wonCards;
 
     public:
 
-        Player();
-
-        Player(std::string name);
+        Player(std::string name = "No Name");
 
         Player(Player &&) noexcept;
 
@@ -26,7 +24,7 @@ namespace ariel {
 
         ~Player();
 
-        std::string get_name();
+        std::string getName();
 
         int stacksize() const;
 
@@ -36,9 +34,9 @@ namespace ariel {
 
         void add_card(const Card &);
 
-        Card remove_card();
+        Card removeCard();
 
-        Card top_card() const;
+        Card topCard() const;
 
         Player &operator=(const Player &);
 
