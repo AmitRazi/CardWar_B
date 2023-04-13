@@ -52,9 +52,9 @@ void Game::shuffleDeck() {
 void Game::distributeCard() {
     for (size_t i = 0; i < 52; i++) {
         if (i % 2 == 0) {
-            player1.add_card(deck.at(i));
+            player1.addCard(deck.at(i));
         } else {
-            player2.add_card(deck.at(i));
+            player2.addCard(deck.at(i));
         }
     }
 }
@@ -253,3 +253,4 @@ Game &Game::operator=(Game &&other) noexcept {
 
     return *this;
 }
+
