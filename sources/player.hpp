@@ -18,7 +18,7 @@ namespace ariel {
     public:
 
         Player(std::string name) : name(std::move(name)), wonCards(0),isPlaying(false) {
-            if(this->name.length() == 0) this->name = "No Name";
+            if(this->name.length() == 0) {this->name = "No Name";}
         }
 
         //Copy constructor
