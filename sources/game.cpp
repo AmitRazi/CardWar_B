@@ -20,7 +20,7 @@ using namespace ariel;
 //Creates a deck with 52 cards. All cards in a standard deck excluding jokers.
 void Game::createDeck() {
     for (int suit = Card::HEARTS; suit <= Card::SPADES; ++suit) {
-        for (int rank = Card::ACE; rank <= Card::KING; ++rank) {
+        for (int rank = Card::TWO; rank <= Card::ACE; ++rank) {
             deck.emplace_back(Card{static_cast<Card::Suit>(suit), static_cast<Card::Rank>(rank)});
         }
     }
@@ -80,7 +80,7 @@ bool Game::playTurn() {
     std::stringstream roundLog;
     Card player1Card = player1.removeCard();
     Card player2Card = player2.removeCard();
-    if (player1Card > player2Card) {
+    if (player2Card < player1Card) {
         p1Wins++;
         counter = 2;
         player1.won(counter);
@@ -113,7 +113,7 @@ bool Game::playTurn() {
             draws++;
 
         } else {
-            if (player1Card > player2Card) {
+            if (player2Card < player1Card) {
                 p1Wins++;
                 player1.won(counter);
                 roundLog << createRoundLog(player1Card,player2Card);
@@ -126,6 +126,9 @@ bool Game::playTurn() {
 
     }
     playLog.push_back(roundLog.str());
+    if(counter > 6){
+        std::cout<<roundLog.str()<<std::endl;
+    }
     rounds++;
     return true;
 }
@@ -190,7 +193,7 @@ void Game::printStats() {
 //This function creates a string depicting the round.
 std::string Game::createRoundLog(const Card &p1Card, const Card &p2Card) {
     std::string outcome;
-    if (p1Card > p2Card) {
+    if (p2Card < p1Card) {
         outcome = player1.getName() + " wins.";
     } else if (p1Card < p2Card) {
         outcome = player2.getName() + " wins.";
