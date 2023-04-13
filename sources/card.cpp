@@ -1,10 +1,11 @@
+#include <sstream>
 #include "card.hpp"
 
 using namespace ariel;
 
 Card::Card(Suit suit, Rank rank) : suit_type(suit), rank_value(rank) {}
 
-Card::Card(const Card &other) : Card(other.get_suit(), other.get_rank()) {
+Card::Card(const Card &other) : Card(other.getSuit(), other.getRank()) {
 }
 
 Card::Card(Card &&other) noexcept: suit_type(other.suit_type), rank_value(other.rank_value) {
@@ -14,11 +15,11 @@ Card::Card(Card &&other) noexcept: suit_type(other.suit_type), rank_value(other.
 
 Card::~Card() = default;
 
-Card::Rank Card::get_rank() const {
+Card::Rank Card::getRank() const {
     return rank_value;
 }
 
-Card::Suit Card::get_suit() const {
+Card::Suit Card::getSuit() const {
     return suit_type;
 }
 
@@ -63,10 +64,15 @@ Card &Card::operator=(Card &&other) noexcept {
     return *this;
 }
 
+Card::operator std::string() const {
+    std::stringstream stringStream;
+    stringStream<<*this;
+    return stringStream.str();
+}
 
 namespace ariel {
     std::ostream &operator<<(std::ostream &ostream, const Card &card) {
-        Card::Rank card_rank = card.get_rank();
+        Card::Rank card_rank = card.getRank();
         std::string rank;
         std::string suit;
 
@@ -115,7 +121,7 @@ namespace ariel {
                 break;
         }
 
-        switch (card.get_suit()) {
+        switch (card.getSuit()) {
             case Card::Suit::CLUBS:
                 suit = "Clubs";
                 break;
