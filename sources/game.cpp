@@ -101,11 +101,12 @@ bool Game::playTurn() {
         roundLog << createRoundLog(player1Card,player2Card);
     } else {
         counter = 2;
-        while ((player1Card == player2Card) && player1.stacksize() > 1) {
+        while ((player1Card == player2Card) && player1.stacksize() >= 1) {
             roundLog << createRoundLog(player1Card,player2Card);
             draws++;
             player1.removeCard();
             player2.removeCard();
+            if(player1.stacksize() == 0) break;
             player1Card = player1.removeCard();
             player2Card = player2.removeCard();
             counter += 4;
