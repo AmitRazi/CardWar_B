@@ -13,11 +13,12 @@ namespace ariel {
         std::string name;
         std::vector<Card> stack;
         int wonCards;
+        bool isPlaying;
 
     public:
 
-        Player(std::string name) : name(std::move(name)), wonCards(0) {
-            if(this->name.length() == 0) {this->name = "No Name";}
+        Player(std::string name) : name(std::move(name)), wonCards(0),isPlaying(false) {
+            if(this->name.length() == 0) this->name = "No Name";
         }
 
         //Copy constructor
@@ -26,7 +27,7 @@ namespace ariel {
 
         //Move constructor
         Player(Player &&other) noexcept: name(std::move(other.name)), stack(std::move(other.stack)),
-                                                 wonCards(other.wonCards) {
+                                                 wonCards(other.wonCards),isPlaying(other.isPlaying) {
             other.wonCards = -1;
         }
 
