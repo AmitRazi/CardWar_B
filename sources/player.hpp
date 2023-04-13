@@ -32,7 +32,7 @@ namespace ariel {
 
         void won(int);
 
-        void add_card(const Card &);
+        void addCard(const Card &card);
 
         Card removeCard();
 
