@@ -8,11 +8,11 @@
 
 using namespace ariel;
 
-Game::Game(Player &player1, Player &player2) : player1(player1), player2(player2), p1_wins(0), p2_wins(0), draws(0),
+Game::Game(Player &player1, Player &player2) : player1(player1), player2(player2), p1Wins(0), p2Wins(0), draws(0),
                                                rounds(0) {
-    Game::create_deck();
-    Game::shuffle_deck();
-    Game::distribute_card();
+    Game::createDeck();
+    Game::shuffleDeck();
+    Game::distributeCard();
 }
 
 Game::Game(const Game &other) : Game(other.player1, other.player2) {
@@ -21,21 +21,47 @@ Game::Game(const Game &other) : Game(other.player1, other.player2) {
 Game::Game(Game &&other) noexcept
         : player1(other.player1),
           player2(other.player2),
-          p1_wins(other.p1_wins),
-          p2_wins(other.p2_wins),
+          p1Wins(other.p1Wins),
+          p2Wins(other.p2Wins),
           draws(other.draws),
           rounds(other.rounds),
           deck(std::move(other.deck)),
-          play_log(std::move(other.play_log)),
+          playLog(std::move(other.playLog)),
           winner(std::move(other.winner)) {
 
-    other.p1_wins = 0;
-    other.p2_wins = 0;
+    other.p1Wins = 0;
+    other.p2Wins = 0;
     other.draws = 0;
     other.rounds = 0;
-};
+}
 
 Game::~Game() = default;
+
+void Game::createDeck() {
+    for (int suit = Card::HEARTS; suit <= Card::SPADES; ++suit) {
+        for (int rank = Card::ACE; rank <= Card::KING; ++rank) {
+            deck.emplace_back(Card{static_cast<Card::Suit>(suit), static_cast<Card::Rank>(rank)});
+        }
+    }
+}
+
+void Game::shuffleDeck() {
+    std::shuffle(deck.begin(), deck.end(), std::mt19937(std::random_device{}()));
+}
+
+void Game::distributeCard() {
+    for (size_t i = 0; i < 52; i++) {
+        if (i % 2 == 0) {
+            player1.add_card(deck.at(i));
+        } else {
+            player2.add_card(deck.at(i));
+        }
+    }
+}
+
+bool Game::gameStarted() {
+    return playLog.empty() == false;
+}
 
 bool Game::playTurn() {
 
@@ -45,11 +71,11 @@ bool Game::playTurn() {
 
     if (player1.stacksize() == 0 && winner.length() == 0) {
         if (player1.cardesTaken() > player2.cardesTaken()) {
-            winner = player1.get_name();
-            p1_wins++;
+            winner = player1.getName();
+            p1Wins++;
         } else if (player1.cardesTaken() < player2.cardesTaken()) {
-            winner = player2.get_name();
-            p2_wins++;
+            winner = player2.getName();
+            p2Wins++;
         } else {
             winner = "Draw";
         }
@@ -60,113 +86,122 @@ bool Game::playTurn() {
 
 
     int counter = 0;
-    std::ostringstream round_log;
-    Card player1_card = player1.remove_card();
-    Card player2_card = player2.remove_card();
-    if (player1_card > player2_card) {
-        p1_wins++;
+    std::stringstream roundLog;
+    Card player1Card = player1.removeCard();
+    Card player2Card = player2.removeCard();
+    if (player1Card > player2Card) {
+        p1Wins++;
         counter = 2;
         player1.won(counter);
-        round_log << player1.get_name() << " played " << player1_card << " " << player2.get_name() << " played "
-                  << player2_card << ". " << player1.get_name() << " won.";
-    } else if (player1_card < player2_card) {
-        p2_wins++;
+        roundLog << createRoundLog(player1Card,player2Card);
+    } else if (player1Card < player2Card) {
+        p2Wins++;
         counter = 2;
         player2.won(counter);
-        round_log << player1.get_name() << " played " << player1_card << " " << player2.get_name() << " played "
-                  << player2_card << ". " << player2.get_name() << " won.";
+        roundLog << createRoundLog(player1Card,player2Card);
     } else {
         counter = 2;
-        while ((player1_card == player2_card) && player1.stacksize() > 1) {
-            round_log << player1.get_name() << " played " << player1_card << " " << player2.get_name() << " played "
-                      << player2_card << ". draw. ";
+        while ((player1Card == player2Card) && player1.stacksize() > 1) {
+            roundLog << createRoundLog(player1Card,player2Card);
             draws++;
-            player1.remove_card();
-            player2.remove_card();
-            player1_card = player1.remove_card();
-            player2_card = player2.remove_card();
+            player1.removeCard();
+            player2.removeCard();
+            player1Card = player1.removeCard();
+            player2Card = player2.removeCard();
             counter += 4;
         }
-        if (player1.stacksize() == 0 && player1_card == player2_card) {
+        if (player1.stacksize() == 0 && player1Card == player2Card) {
             int split_cards = counter / 2;
             player1.won(split_cards);
             player2.won(split_cards);
-            round_log << player1.get_name() << " played " << player1_card << " " << player2.get_name()
-                      << " played " << player2_card << ". draw.";
+            roundLog << createRoundLog(player1Card,player2Card);
             draws++;
 
         } else {
-            if (player1_card > player2_card) {
-                p1_wins++;
+            if (player1Card > player2Card) {
+                p1Wins++;
                 player1.won(counter);
-                round_log << player1.get_name() << " played " << player1_card << " " << player2.get_name()
-                          << " played " << player2_card << ". " << player1.get_name() << " won.";
+                roundLog << createRoundLog(player1Card,player2Card);
             } else {
-                p2_wins++;
+                p2Wins++;
                 player2.won(counter);
-                round_log << player1.get_name() << " played " << player1_card << " " << player2.get_name()
-                          << " played " << player2_card << ". " << player2.get_name() << " won.";
+                roundLog << createRoundLog(player1Card,player2Card);
             }
         }
 
     }
-    play_log.push_back(round_log.str());
+    playLog.push_back(roundLog.str());
     rounds++;
     return true;
-}
-
-void Game::printLastTurn() {
-    std::string round_log = play_log.back();
-    std::cout << round_log << std::endl;
 }
 
 void Game::playAll() {
     while (playTurn());
 }
 
-void Game::printWiner() {
-    std::cout << winner << std::endl;
+void Game::printLastTurn() {
+    if (gameStarted() == false) {
+        std::cout << "The game hasn't started" << std::endl;
+        return;
+    }
+
+    std::string roundLog = playLog.back();
+    std::cout << roundLog << std::endl;
 }
 
+
 void Game::printLog() {
-    for (std::string &round: play_log) {
+    if (gameStarted() == false) {
+        std::cout << "The game hasn't started" << std::endl;
+        return;
+    }
+
+    for (std::string &round: playLog) {
         std::cout << round << std::endl;
     }
 }
 
+void Game::printWiner() {
+    if (gameStarted() == false) {
+        std::cout << "The game hasn't started" << std::endl;
+        return;
+    }
+
+    std::cout << winner << std::endl;
+}
+
 void Game::printStats() {
-    std::string p1_name = player1.get_name();
-    std::string p2_name = player2.get_name();
-    double p1_winrate = static_cast<double>(p1_wins) / (rounds);
-    double p2_winrate = static_cast<double>(p2_wins) / (rounds);
+    if (gameStarted() == false) {
+        std::cout << "The game hasn't started" << std::endl;
+        return;
+    }
+
+    std::string p1Name = player1.getName();
+    std::string p2Name = player2.getName();
+    double p1Winrate = static_cast<double>(p1Wins) / (rounds);
+    double p2Winrate = static_cast<double>(p2Wins) / (rounds);
     double draw_rate = static_cast<double>(draws) / rounds;
-    std::cout << std::fixed << std::setprecision(2) << p1_name << " win rate: " << p1_winrate << ", " << p2_name
-              << " win rate: " << p2_winrate
+    std::cout << std::fixed << std::setprecision(2) << p1Name << " win rate: " << p1Winrate << ", " << p2Name
+              << " win rate: " << p2Winrate
               << ", draw rate: " << draw_rate << ", amount of draws: " << draws <<
               ", winner: ";
-    printWiner();
+    std::string message = winner.empty() ? "No winner yet" : winner;
+    std::cout << winner;
 }
 
-void Game::create_deck() {
-    for (int suit = Card::HEARTS; suit <= Card::SPADES; ++suit) {
-        for (int rank = Card::ACE; rank <= Card::KING; ++rank) {
-            deck.emplace_back(Card{static_cast<Card::Suit>(suit), static_cast<Card::Rank>(rank)});
-        }
+std::string Game::createRoundLog(const Card &p1Card, const Card &p2Card) {
+    std::string outcome;
+    if (p1Card > p2Card) {
+        outcome = player1.getName() + " wins.";
+    } else if (p1Card < p2Card) {
+        outcome = player2.getName() + " wins.";
+    } else{
+        outcome = "Draw. ";
     }
-}
+    std::string roundLog = player1.getName() + " played " + std::string(p1Card) + " " + player2.getName()
+                           + " played " + std::string(p2Card) + ". " + outcome;
 
-void Game::shuffle_deck() {
-    std::shuffle(deck.begin(), deck.end(), std::mt19937(std::random_device{}()));
-}
-
-void Game::distribute_card() {
-    for (size_t i = 0; i < 52; i++) {
-        if (i % 2 == 0) {
-            player1.add_card(deck.at(i));
-        } else {
-            player2.add_card(deck.at(i));
-        }
-    }
+    return roundLog;
 }
 
 Game &Game::operator=(const Game &other) {
@@ -178,11 +213,11 @@ Game &Game::operator=(const Game &other) {
     player2 = other.player2;
     rounds = other.rounds;
     draws = other.draws;
-    p2_wins = other.p2_wins;
-    p1_wins = other.p1_wins;
+    p2Wins = other.p2Wins;
+    p1Wins = other.p1Wins;
     winner = other.winner;
     deck = other.deck;
-    play_log = other.play_log;
+    playLog = other.playLog;
 
     return *this;
 }
@@ -196,26 +231,25 @@ Game &Game::operator=(Game &&other) noexcept {
     player2 = other.player2;
     rounds = other.rounds;
     draws = other.draws;
-    p2_wins = other.p2_wins;
-    p1_wins = other.p1_wins;
+    p2Wins = other.p2Wins;
+    p1Wins = other.p1Wins;
     winner = std::move(other.winner);
     deck = std::move(other.deck);
-    play_log = std::move(other.play_log);
+    playLog = std::move(other.playLog);
 
     rounds = other.rounds;
     draws = other.draws;
-    p2_wins = other.p2_wins;
-    p1_wins = other.p1_wins;
+    p2Wins = other.p2Wins;
+    p1Wins = other.p1Wins;
     winner = std::move(other.winner);
     deck = std::move(other.deck);
-    play_log = std::move(other.play_log);
+    playLog = std::move(other.playLog);
 
 
     other.rounds = 0;
     other.draws = 0;
-    other.p2_wins = 0;
-    other.p1_wins = 0;
+    other.p2Wins = 0;
+    other.p1Wins = 0;
 
     return *this;
 }
-
