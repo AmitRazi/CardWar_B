@@ -21,7 +21,7 @@ namespace ariel {
 
         //Enum used to indicate the rank of a card
         enum Rank {
-            INVALID_RANK = 0, ACE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING
+            INVALID_RANK = 1, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING, ACE
         };
 
 
