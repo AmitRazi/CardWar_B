@@ -1,3 +1,12 @@
+/*
+ * References:
+ * Regrading move semantics: https://www.youtube.com/watch?v=Bt3zcJZIalk
+ * Regrading tuples: https://www.youtube.com/watch?v=33Y_5gOyi3Y
+ * Regrading shuffle and mt19937: https://en.cppreference.com/w/cpp/algorithm/random_shuffle
+ * Regrading stringstreams, sets, and more (I've been studying this course in recent weeks): https://www.udemy.com/course/beginning-c-plus-plus-programming/
+ */
+
+
 #include <sstream>
 #include <random>
 #include <stdexcept>
@@ -8,35 +17,7 @@
 
 using namespace ariel;
 
-Game::Game(Player &player1, Player &player2) : player1(player1), player2(player2), p1Wins(0), p2Wins(0), draws(0),
-                                               rounds(0) {
-    Game::createDeck();
-    Game::shuffleDeck();
-    Game::distributeCard();
-}
-
-Game::Game(const Game &other) : Game(other.player1, other.player2) {
-}
-
-Game::Game(Game &&other) noexcept
-        : player1(other.player1),
-          player2(other.player2),
-          p1Wins(other.p1Wins),
-          p2Wins(other.p2Wins),
-          draws(other.draws),
-          rounds(other.rounds),
-          deck(std::move(other.deck)),
-          playLog(std::move(other.playLog)),
-          winner(std::move(other.winner)) {
-
-    other.p1Wins = 0;
-    other.p2Wins = 0;
-    other.draws = 0;
-    other.rounds = 0;
-}
-
-Game::~Game() = default;
-
+//Creates a deck with 52 cards. All cards in a standard deck excluding jokers.
 void Game::createDeck() {
     for (int suit = Card::HEARTS; suit <= Card::SPADES; ++suit) {
         for (int rank = Card::ACE; rank <= Card::KING; ++rank) {
@@ -45,10 +26,12 @@ void Game::createDeck() {
     }
 }
 
+//Uses the shuffle algorithm from the STL and mt19937(A Mersenne Twister pseudo-random generator of 32-bit numbers with a state size of 19937 bits.)
 void Game::shuffleDeck() {
     std::shuffle(deck.begin(), deck.end(), std::mt19937(std::random_device{}()));
 }
 
+//Distributes the shuffled deck to the players. Cards in even indices go to player1, odds go to player2.
 void Game::distributeCard() {
     for (size_t i = 0; i < 52; i++) {
         if (i % 2 == 0) {
@@ -59,10 +42,16 @@ void Game::distributeCard() {
     }
 }
 
+/*Checkes if the game has started by checking if the playLog is still empty. After a single round the playLog won't be empty.
+ * This is used by the print functions.
+ */
 bool Game::gameStarted() {
     return playLog.empty() == false;
 }
 
+
+/*Runs a single game round. This function returns a boolean to indicate if a round was successful, thus it return false if the game has already finished.
+ * */
 bool Game::playTurn() {
 
     if (&player1 == &player2) {
@@ -79,6 +68,8 @@ bool Game::playTurn() {
         } else {
             winner = "Draw";
         }
+        cardsWonByPlayer1 = player1.cardesTaken();
+        cardsWonByPlayer2 = player2.cardesTaken();
         return false;
     } else if (player1.stacksize() == 0) {
         throw std::runtime_error("The game has already finished");
@@ -106,7 +97,10 @@ bool Game::playTurn() {
             draws++;
             player1.removeCard();
             player2.removeCard();
-            if(player1.stacksize() == 0) break;
+            if(player1.stacksize() == 0){
+                counter+=2;
+                break;
+            }
             player1Card = player1.removeCard();
             player2Card = player2.removeCard();
             counter += 4;
@@ -136,10 +130,12 @@ bool Game::playTurn() {
     return true;
 }
 
+//Runs playTurn() until false is returned - meaning the game has finished.
 void Game::playAll() {
     while (playTurn());
 }
 
+//Prints a description of the latest round played.
 void Game::printLastTurn() {
     if (gameStarted() == false) {
         std::cout << "The game hasn't started" << std::endl;
@@ -150,7 +146,7 @@ void Game::printLastTurn() {
     std::cout << roundLog << std::endl;
 }
 
-
+//Prints a description of each round played thus far.
 void Game::printLog() {
     if (gameStarted() == false) {
         std::cout << "The game hasn't started" << std::endl;
@@ -162,15 +158,16 @@ void Game::printLog() {
     }
 }
 
+//Prints the winner or draw. If the game has finished, it prints an appropriate message.
 void Game::printWiner() {
-    if (gameStarted() == false) {
-        std::cout << "The game hasn't started" << std::endl;
+    if (player1.stacksize() == 0) {
+        std::cout << "The game hasn't finished yet" << std::endl;
         return;
     }
-
     std::cout << winner << std::endl;
 }
 
+//Prints the stats of the game thus far.
 void Game::printStats() {
     if (gameStarted() == false) {
         std::cout << "The game hasn't started" << std::endl;
@@ -182,14 +179,15 @@ void Game::printStats() {
     double p1Winrate = static_cast<double>(p1Wins) / (rounds);
     double p2Winrate = static_cast<double>(p2Wins) / (rounds);
     double draw_rate = static_cast<double>(draws) / rounds;
-    std::cout << std::fixed << std::setprecision(2) << p1Name << " win rate: " << p1Winrate << ", " << p2Name
-              << " win rate: " << p2Winrate
-              << ", draw rate: " << draw_rate << ", amount of draws: " << draws <<
+    std::cout << std::fixed << std::setprecision(2) << p1Name << " win rate: " << p1Winrate << ", "<<"Cards won by "<<p1Name<<cardsWonByPlayer1<<", " << p2Name
+              << " win rate: " << p2Winrate<<", Cards won by "<<p1Name<<cardsWonByPlayer1<<", "
+              << "draw rate: " << draw_rate << ", amount of draws: " << draws <<
               ", winner: ";
     std::string message = winner.empty() ? "No winner yet" : winner;
     std::cout << winner;
 }
 
+//This function creates a string depicting the round.
 std::string Game::createRoundLog(const Card &p1Card, const Card &p2Card) {
     std::string outcome;
     if (p1Card > p2Card) {
@@ -205,6 +203,7 @@ std::string Game::createRoundLog(const Card &p1Card, const Card &p2Card) {
     return roundLog;
 }
 
+//Overloading copy assignment operator
 Game &Game::operator=(const Game &other) {
     if (this == &other) {
         return *this;
@@ -216,6 +215,8 @@ Game &Game::operator=(const Game &other) {
     draws = other.draws;
     p2Wins = other.p2Wins;
     p1Wins = other.p1Wins;
+    cardsWonByPlayer2 = other.cardsWonByPlayer2;
+    cardsWonByPlayer1 = other.cardsWonByPlayer1;
     winner = other.winner;
     deck = other.deck;
     playLog = other.playLog;
@@ -223,6 +224,7 @@ Game &Game::operator=(const Game &other) {
     return *this;
 }
 
+//Overloading move assignment operator
 Game &Game::operator=(Game &&other) noexcept {
     if (this == &other) {
         return *this;
@@ -234,19 +236,18 @@ Game &Game::operator=(Game &&other) noexcept {
     draws = other.draws;
     p2Wins = other.p2Wins;
     p1Wins = other.p1Wins;
+    cardsWonByPlayer1 = other.cardsWonByPlayer1;
+    cardsWonByPlayer2 = other.cardsWonByPlayer2;
     winner = std::move(other.winner);
     deck = std::move(other.deck);
     playLog = std::move(other.playLog);
 
-    rounds = other.rounds;
-    draws = other.draws;
-    p2Wins = other.p2Wins;
-    p1Wins = other.p1Wins;
     winner = std::move(other.winner);
     deck = std::move(other.deck);
     playLog = std::move(other.playLog);
 
-
+    cardsWonByPlayer2 = 0;
+    cardsWonByPlayer1 = 0;
     other.rounds = 0;
     other.draws = 0;
     other.p2Wins = 0;
