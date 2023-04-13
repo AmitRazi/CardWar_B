@@ -13,24 +13,40 @@ namespace ariel {
     class Card {
 
     public:
+
+        //Enum used to indicate the suit of a card
         enum Suit {
             INVALID_SUIT = 0, HEARTS, DIAMONDS, CLUBS, SPADES
         };
+
+        //Enum used to indicate the rank of a card
         enum Rank {
             INVALID_RANK = 0, ACE, TWO, THREE, FOUR, FIVE, SIX, SEVEN, EIGHT, NINE, TEN, JACK, QUEEN, KING
         };
 
-        Card(Suit suit, Rank rank);
 
-        Card(const Card &);
+        Card(Suit suit, Rank rank) : suitType(suit), rankValue(rank) {}
 
-        Card(Card &&) noexcept;
+        //Copy constructor
+        Card(const Card &other) : Card(other.getSuit(), other.getRank()) {
+        }
 
-        ~Card();
+        //Move constructor
+        Card(Card &&other) noexcept: suitType(other.suitType), rankValue(other.rankValue) {
+            other.suitType = INVALID_SUIT;
+            other.rankValue = INVALID_RANK;
+        }
 
-        Rank getRank() const;
+        ~Card() = default;
 
-        Suit getSuit() const;
+
+        Rank getRank() const {
+            return rankValue;
+        }
+
+        Suit getSuit() const {
+            return suitType;
+        }
 
         bool operator>(const Card &) const;
 
@@ -47,8 +63,8 @@ namespace ariel {
         friend std::ostream &operator<<(std::ostream &ostream, const Card &card);
 
     private:
-        Suit suit_type;
-        Rank rank_value;
+        Suit suitType;
+        Rank rankValue;
     };
 }
 
